@@ -451,7 +451,7 @@ the Kitsune-User template is vulnerable to ESC13 as its description says Templat
 [+] Password changed successfully!
 ```
 
-T**he Bloodhound show that user `schlop` is member of Remote Management , lets test its credentials that we just forced above.**
+**The Bloodhound show that user `schlop` is member of Remote Management , lets test its credentials that we just forced above.**
 
 ![userschlop.png](/images/kitsune/userschlop.png)
 
