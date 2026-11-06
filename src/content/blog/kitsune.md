@@ -4,7 +4,7 @@ description: "An Easy-rated Active Directory lab walkthrough covering enumeratio
 pubDate: 2026-11-06
 category: "Active Directory"
 difficulty: "Easy"
-heroImage: "/images/kitsune/laboverview.png"
+
 ---
 
 ![laboverview.png](/images/kitsune/laboverview.png)
