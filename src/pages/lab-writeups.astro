@@ -1,0 +1,331 @@
+
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+
+const posts = await getCollection('blog');
+const sortedPosts = posts.sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<html lang="en">
+	<head>
+		<BaseHead
+			title="Lab Writeups"
+			description="Hands-on cybersecurity lab writeups covering AWS, web security, Linux, Windows and Active Directory."
+		/>
+	</head>
+
+	<body>
+		<Header />
+
+		<main>
+			<section class="intro">
+				<p class="eyebrow">PRACTICAL SECURITY RESEARCH</p>
+				<h1>Lab <span>Writeups</span></h1>
+				<p class="subtitle">
+					Real-world labs. Practical exploitation. Documented methodology.
+					Explore my hands-on cybersecurity research and technical findings.
+				</p>
+			</section>
+
+			<section class="filters">
+				<div class="filter-group">
+					<label for="category-filter">Category</label>
+					<select id="category-filter">
+						<option value="all">All categories</option>
+						<option value="AWS">AWS</option>
+						<option value="Web">Web</option>
+						<option value="Linux">Linux</option>
+						<option value="Windows">Windows</option>
+						<option value="Active Directory">Active Directory</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="difficulty-filter">Difficulty</label>
+					<select id="difficulty-filter">
+						<option value="all">All difficulties</option>
+						<option value="Easy">Easy</option>
+						<option value="Medium">Medium</option>
+						<option value="Hard">Hard</option>
+					</select>
+				</div>
+
+				<button id="reset-filters" type="button">Reset filters</button>
+			</section>
+
+			<div class="results-info">
+				<span id="results-count">{sortedPosts.length} writeups found</span>
+			</div>
+
+			<section class="writeups-grid" id="writeups-grid">
+				{sortedPosts.map((post) => (
+					<article
+						class="writeup-card"
+						data-category={post.data.category}
+						data-difficulty={post.data.difficulty}
+					>
+						<div class="card-top">
+							<span class="category">{post.data.category}</span>
+							<span class={`difficulty ${post.data.difficulty.toLowerCase()}`}>
+								{post.data.difficulty}
+							</span>
+						</div>
+
+						<h2>{post.data.title}</h2>
+						<p class="description">{post.data.description}</p>
+
+						<div class="card-bottom">
+							<time><FormattedDate date={post.data.pubDate} /></time>
+							<a href={`/blog/${post.id}/`}>Read writeup →</a>
+						</div>
+					</article>
+				))}
+			</section>
+
+			<p id="empty-message" hidden>
+				No writeups match these filters. Try another combination.
+			</p>
+		</main>
+
+		<Footer />
+
+		<script>
+			const categoryFilter = document.querySelector<HTMLSelectElement>('#category-filter');
+			const difficultyFilter = document.querySelector<HTMLSelectElement>('#difficulty-filter');
+			const resetButton = document.querySelector<HTMLButtonElement>('#reset-filters');
+			const cards = document.querySelectorAll<HTMLElement>('.writeup-card');
+			const resultsCount = document.querySelector<HTMLElement>('#results-count');
+			const emptyMessage = document.querySelector<HTMLElement>('#empty-message');
+
+			function filterWriteups() {
+				const category = categoryFilter?.value ?? 'all';
+				const difficulty = difficultyFilter?.value ?? 'all';
+				let visibleCount = 0;
+
+				cards.forEach((card) => {
+					const matchesCategory =
+						category === 'all' || card.dataset.category === category;
+
+					const matchesDifficulty =
+						difficulty === 'all' || card.dataset.difficulty === difficulty;
+
+					const visible = matchesCategory && matchesDifficulty;
+					card.hidden = !visible;
+
+					if (visible) visibleCount++;
+				});
+
+				if (resultsCount) {
+					resultsCount.textContent =
+						`${visibleCount} ${visibleCount === 1 ? 'writeup' : 'writeups'} found`;
+				}
+
+				if (emptyMessage) {
+					emptyMessage.hidden = visibleCount !== 0;
+				}
+			}
+
+			categoryFilter?.addEventListener('change', filterWriteups);
+			difficultyFilter?.addEventListener('change', filterWriteups);
+
+			resetButton?.addEventListener('click', () => {
+				if (categoryFilter) categoryFilter.value = 'all';
+				if (difficultyFilter) difficultyFilter.value = 'all';
+				filterWriteups();
+			});
+		</script>
+	</body>
+</html>
+
+<style>
+	.intro {
+		padding: 45px 0 35px;
+	}
+
+	.eyebrow {
+		color: #9cff57;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 2px;
+	}
+
+	.intro h1 {
+		margin: 12px 0;
+	}
+
+	.intro h1 span {
+		color: #9cff57;
+	}
+
+	.subtitle {
+		max-width: 650px;
+		font-size: 16px;
+	}
+
+	.filters {
+		display: flex;
+		align-items: end;
+		flex-wrap: wrap;
+		gap: 18px;
+		padding: 22px;
+		background: #101612;
+		border: 1px solid #263329;
+		border-radius: 10px;
+	}
+
+	.filter-group {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		flex: 1;
+		min-width: 180px;
+	}
+
+	.filter-group label {
+		color: #a0aaa2;
+		font-size: 12px;
+		font-weight: 700;
+	}
+
+	select {
+		width: 100%;
+		padding: 12px;
+		border: 1px solid #263329;
+		border-radius: 6px;
+		background: #080b0a;
+		color: #f0f4ef;
+	}
+
+	button {
+		padding: 12px 18px;
+		border: 1px solid #9cff57;
+		border-radius: 6px;
+		background: transparent;
+		color: #9cff57;
+		cursor: pointer;
+	}
+
+	button:hover {
+		background: #9cff57;
+		color: #080b0a;
+	}
+
+	.results-info {
+		margin: 25px 0 15px;
+		color: #68736a;
+		font-size: 13px;
+	}
+
+	.writeups-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 20px;
+	}
+
+	.writeup-card {
+		display: flex;
+		flex-direction: column;
+		padding: 22px;
+		background: #101612;
+		border: 1px solid #263329;
+		border-radius: 10px;
+		transition: border-color 0.2s, transform 0.2s;
+	}
+
+	.writeup-card:hover {
+		border-color: #9cff57;
+		transform: translateY(-3px);
+	}
+
+	.writeup-card[hidden] {
+		display: none;
+	}
+
+	.card-top {
+		display: flex;
+		justify-content: space-between;
+		gap: 10px;
+		margin-bottom: 20px;
+	}
+
+	.category,
+	.difficulty {
+		padding: 5px 10px;
+		border-radius: 4px;
+		font-size: 11px;
+		font-weight: 700;
+	}
+
+	.category {
+		background: #1b2a1d;
+		color: #9cff57;
+	}
+
+	.difficulty {
+		background: #252525;
+		color: #d0d0d0;
+	}
+
+	.difficulty.easy {
+		color: #9cff57;
+	}
+
+	.difficulty.medium {
+		color: #f4c95d;
+	}
+
+	.difficulty.hard {
+		color: #ff7777;
+	}
+
+	.writeup-card h2 {
+		margin-bottom: 10px;
+		font-size: 20px;
+	}
+
+	.description {
+		flex: 1;
+		font-size: 14px;
+	}
+
+	.card-bottom {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-top: 20px;
+		padding-top: 15px;
+		border-top: 1px solid #263329;
+		font-size: 12px;
+	}
+
+	.card-bottom time {
+		color: #68736a;
+	}
+
+	.card-bottom a {
+		font-weight: 700;
+	}
+
+	#empty-message {
+		margin: 35px 0;
+		text-align: center;
+	}
+
+	@media (max-width: 650px) {
+		.writeups-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.intro {
+			padding-top: 25px;
+		}
+	}
+</style>
