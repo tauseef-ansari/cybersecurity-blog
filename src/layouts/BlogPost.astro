@@ -1,13 +1,17 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import type { MarkdownHeading } from 'astro';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & {
+  headings?: MarkdownHeading[];
+};
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
+const tocHeadings = headings.filter((heading) => heading.depth >= 1 && heading.depth <= 3);
 ---
 
 <html lang="en">
@@ -22,11 +26,49 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         box-sizing: border-box;
       }
 
+      .article-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 900px) minmax(220px, 280px);
+        gap: clamp(24px, 4vw, 64px);
+        align-items: start;
+        justify-content: start;
+      }
+
       article {
         width: 100%;
         margin: 0;
         text-align: left;
       }
+
+      .article-content { min-width: 0; }
+
+      .toc {
+        position: sticky;
+        top: 24px;
+        max-height: calc(100vh - 48px);
+        overflow-y: auto;
+        margin-top: 32px;
+        padding: 20px;
+        border: 1px solid rgba(150, 170, 150, .25);
+        border-radius: 12px;
+        background: rgba(120, 140, 120, .06);
+      }
+      .toc-title {
+        margin: 0 0 14px;
+        font-size: .9rem;
+        font-weight: 700;
+        letter-spacing: .03em;
+      }
+      .toc-list { list-style: none; padding: 0; margin: 0; }
+      .toc-item { margin: 0 0 9px; line-height: 1.45; }
+      .toc-item a { color: inherit; opacity: .8; text-decoration: none; font-size: .88rem; overflow-wrap: anywhere; }
+      .toc-item a:hover, .toc-item a:focus-visible { opacity: 1; text-decoration: underline; }
+      .toc-level-2 { padding-left: 14px; }
+      .toc-level-3 { padding-left: 28px; }
+      .mobile-toc { display: none; }
+      .prose :global(h1[id]),
+      .prose :global(h2[id]),
+      .prose :global(h3[id]) { scroll-margin-top: 24px; }
 
       .hero-image {
         width: 100%;
@@ -152,6 +194,21 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         overflow-x: auto;
       }
 
+      @media (max-width: 1100px) {
+        .article-layout { display: block; }
+        .desktop-toc { display: none; }
+        .mobile-toc {
+          display: block;
+          max-width: 900px;
+          margin: 20px 0 0;
+          padding: 14px 18px;
+          border: 1px solid rgba(150, 170, 150, .25);
+          border-radius: 10px;
+        }
+        .mobile-toc summary { cursor: pointer; font-weight: 700; }
+        .mobile-toc .toc-list { margin-top: 14px; }
+      }
+
       @media (max-width: 768px) {
         main {
           padding: 0 16px;
@@ -179,28 +236,60 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
   <body>
     <Header />
     <main>
-      <article>
-        <div class="hero-image">
-          {heroImage && (
-            <img width={1020} height={510} src={heroImage} alt="" />
+      <div class="article-layout">
+        <div class="article-content">
+          {tocHeadings.length > 0 && (
+            <details class="mobile-toc">
+              <summary>On this page</summary>
+              <nav aria-label="Article table of contents">
+                <ul class="toc-list">
+                  {tocHeadings.map((heading) => (
+                    <li class={`toc-item toc-level-${heading.depth}`}>
+                      <a href={`#${heading.slug}`}>{heading.text}</a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </details>
           )}
-        </div>
-        <div class="prose">
-          <div class="title">
-            <div class="date">
-              <FormattedDate date={pubDate} />
-              {updatedDate && (
-                <div class="last-updated-on">
-                  Last updated on <FormattedDate date={updatedDate} />
+          <article>
+            {heroImage && (
+              <div class="hero-image">
+                <img width={1020} height={510} src={heroImage} alt="" />
+              </div>
+            )}
+            <div class="prose">
+              <div class="title">
+                <div class="date">
+                  <FormattedDate date={pubDate} />
+                  {updatedDate && (
+                    <div class="last-updated-on">
+                      Last updated on <FormattedDate date={updatedDate} />
+                    </div>
+                  )}
                 </div>
-              )}
+                <h1>{title}</h1>
+                <hr />
+              </div>
+              <slot />
             </div>
-            <h1>{title}</h1>
-            <hr />
-          </div>
-          <slot />
+          </article>
         </div>
-      </article>
+        {tocHeadings.length > 0 && (
+          <aside class="toc desktop-toc" aria-label="Article table of contents">
+            <h2 class="toc-title">On this page</h2>
+            <nav aria-label="Jump to section">
+              <ul class="toc-list">
+                {tocHeadings.map((heading) => (
+                  <li class={`toc-item toc-level-${heading.depth}`}>
+                    <a href={`#${heading.slug}`}>{heading.text}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        )}
+      </div>
     </main>
     <Footer />
   </body>
