@@ -1,123 +1,218 @@
-
 ---
-import HeaderLink from './HeaderLink.astro';
-import { SITE_TITLE } from '../consts';
+const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+const links = [
+  {
+    href: '/lab-writeups',
+    label: 'Lab Writeups',
+    active:
+      pathname === '/lab-writeups' ||
+      pathname.startsWith('/lab-writeups/') ||
+      pathname === '/blog' ||
+      pathname.startsWith('/blog/'),
+  },
+  {
+    href: '/tools-techniques',
+    label: 'Tools & Techniques',
+    active:
+      pathname === '/tools-techniques' ||
+      pathname.startsWith('/tools-techniques/'),
+  },
+];
 ---
 
-<header>
-  <nav>
-    <a class="brand" href="/">
-      <span class="brand-icon">P</span>
-      <span>Pentest<span class="brand-green">Blueprint</span></span>
+<header class="site-header">
+  <nav class="header-inner" aria-label="Main navigation">
+    <a class="brand" href="/" aria-label="PentestBlueprint home">
+      <span class="brand-icon" aria-hidden="true">
+        P<span>.</span>
+      </span>
+
+      <span class="brand-name">
+        Pentest<span class="brand-lime">Blueprint</span>
+        <small>FIELD NOTES FROM THE LAB</small>
+      </span>
     </a>
 
     <div class="internal-links">
-      <HeaderLink href="/lab-writeups">Lab Writeups</HeaderLink>
-      <HeaderLink href="/tools-techniques">Tools &amp; Techniques</HeaderLink>
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            class:list={['nav-link', { active: link.active }]}
+            aria-current={
+              pathname === link.href ? 'page' : undefined
+            }
+          >
+            {link.label}
+          </a>
+        ))
+      }
     </div>
   </nav>
 </header>
 
 <style>
-  header {
+  .site-header {
     position: relative;
     z-index: 10;
+    width: 100%;
     margin: 0;
-    padding: 0 1.5rem;
-    background: #080b0a;
-    border-bottom: 1px solid #202b24;
+    padding: 0;
+    background: #071326;
+    border-bottom: 1px solid #ffffff1c;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   }
 
-  nav {
-    max-width: 1160px;
-    min-height: 76px;
-    margin: 0 auto;
+  .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
+    gap: 28px;
+    width: min(1400px, calc(100% - 96px));
+    min-height: 104px;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   .brand {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    color: #f0f4ef;
-    font-size: 17px;
+    gap: 12px;
+    color: #f3f6fc;
+    font-size: 20px;
     font-weight: 800;
-    letter-spacing: -0.6px;
+    line-height: 1.4;
+    letter-spacing: -0.8px;
     text-decoration: none;
     white-space: nowrap;
   }
 
   .brand-icon {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 7px;
-    background: #9cff57;
-    color: #080b0a;
-    font-size: 20px;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding-right: 4px;
+    box-sizing: border-box;
+    border: 1px solid #a6ff6460;
+    border-radius: 13px;
+    background: #a6ff64;
+    color: #071326;
+    box-shadow: 0 4px 0 #a6ff6420;
+    font-size: 29px;
     font-weight: 900;
+    letter-spacing: -4px;
   }
 
-  .brand-green {
-    color: #9cff57;
+  .brand-icon span {
+    color: #376526;
+  }
+
+  .brand-lime {
+    color: #a6ff64;
+  }
+
+  .brand-name small {
+    display: block;
+    margin-top: 3px;
+    color: #afbdd1;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 9px;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 2px;
   }
 
   .internal-links {
     display: flex;
     align-items: center;
-    gap: 25px;
+    gap: 34px;
   }
 
-  .internal-links a {
-    padding: 26px 0;
-    color: #a0aaa2;
-    border-bottom: 2px solid transparent;
-    text-decoration: none;
-    font-size: 13px;
+  .nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 0;
+    color: #afbdd1;
+    font-size: 14px;
     font-weight: 600;
-    transition: color 0.2s, border-color 0.2s;
+    line-height: 1.5;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s;
   }
 
-  .internal-links a:hover {
-    color: #9cff57;
+  .nav-link::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: #a6ff64;
+    content: '';
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s;
   }
 
-  .internal-links a.active {
-    color: #9cff57;
-    border-bottom-color: #9cff57;
+  .nav-link:hover,
+  .nav-link.active {
+    color: #a6ff64;
   }
 
-  @media (max-width: 600px) {
-    header {
-      padding: 0 1rem;
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    transform: scaleX(1);
+  }
+
+  .brand:focus-visible,
+  .nav-link:focus-visible {
+    outline: 3px solid #a6ff64;
+    outline-offset: 6px;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 1100px) {
+    .header-inner {
+      width: calc(100% - 64px);
     }
+  }
 
-    nav {
-      min-height: 70px;
+  @media (max-width: 560px) {
+    .header-inner {
       flex-wrap: wrap;
-      justify-content: center;
-      gap: 0;
-      padding-top: 12px;
+      gap: 20px;
+      width: calc(100% - 40px);
+      min-height: 0;
+      padding: 20px 0;
     }
 
     .brand {
-      width: 100%;
-      justify-content: center;
+      font-size: 18px;
     }
 
     .internal-links {
+      justify-content: space-between;
+      gap: 12px;
       width: 100%;
-      justify-content: center;
-      gap: 22px;
     }
 
-    .internal-links a {
-      padding: 12px 0;
+    .nav-link {
       font-size: 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-link,
+    .nav-link::after {
+      transition: none;
     }
   }
 </style>
