@@ -3,44 +3,52 @@
 import '../styles/global.css';
 
 interface Props {
-	title: string;
-	description: string;
-	image?: string;
+  title: string;
+  description: string;
+  image?: string;
 }
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-
 const {
-	title,
-	description,
-	image = '/blog-placeholder-1.jpg',
+  title,
+  description,
+  image = '/pentestblueprint-preview.png',
 } = Astro.props;
+
+const siteURL = 'https://pentestblueprint.netlify.app';
+
+const canonicalURL = new URL(Astro.url.pathname, siteURL);
+const imageURL = new URL(image, siteURL).toString();
+
+const fullTitle = `${title} | PentestBlueprint`;
 ---
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="theme-color" content="#071326" />
 
 <!-- Canonical URL -->
-<link rel="canonical" href={canonicalURL} />
+<link rel="canonical" href={canonicalURL.toString()} />
 
 <!-- Primary Metadata -->
-<title>{title} | PentestBlueprint</title>
-<meta name="title" content={`${title} | PentestBlueprint`} />
+<title>{fullTitle}</title>
+<meta name="title" content={fullTitle} />
 <meta name="description" content={description} />
-<meta name="theme-color" content="#080b0a" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
-<meta property="og:url" content={Astro.url} />
+<meta property="og:url" content={canonicalURL.toString()} />
 <meta property="og:site_name" content="PentestBlueprint" />
-<meta property="og:title" content={`${title} | PentestBlueprint`} />
+<meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={imageURL} />
+<meta property="og:image:alt" content="PentestBlueprint cybersecurity portfolio preview" />
+<meta property="og:image:type" content="image/png" />
 
-<!-- Social Sharing -->
+<!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content={`${title} | PentestBlueprint`} />
+<meta name="twitter:title" content={fullTitle} />
 <meta name="twitter:description" content={description} />
-<meta name="twitter:image" content={new URL(image, Astro.url)} />
+<meta name="twitter:image" content={imageURL} />
