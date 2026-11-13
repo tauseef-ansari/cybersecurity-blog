@@ -7,7 +7,7 @@ category: "Active Directory"
 difficulty: "Easy"
 ---
 
-# Kerberoasting in Active Directory: Four Practical Attack Techniques
+
 
 > **Lab:** HackSmarter Kerberoasting Lab · **Difficulty:** Easy · **Environment:** `hacksmarter.hsm` · **Target:** `DC01` · **Tools:** RustScan, Nmap, NetExec, Hashcat
 
