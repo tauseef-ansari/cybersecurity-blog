@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
 
 const posts = (await getCollection('blog'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
@@ -14,11 +15,12 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <BaseHead
+      title="The flag is only the ending."
+      description="Explore PentestBlueprint — hands-on cybersecurity labs, Active Directory attack paths, web application security, and offensive security techniques."
+      image="/blog-placeholder-1.jpg"
+    />
     <meta name="theme-color" content="#071326" />
-    <meta name="description" content="The flag is only the ending. Follow the whole story: practical cybersecurity labs, Active Directory attack paths, and lessons from PentestBlueprint." />
-    <title>PentestBlueprint | The flag is only the ending.</title>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
