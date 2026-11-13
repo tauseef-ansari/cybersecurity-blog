@@ -2,6 +2,7 @@
 title: "Kitsune — Active Directory Lab (HackSmarter)"
 description: "An Easy-rated Active Directory lab walkthrough covering enumeration, Password Safe, BloodHound, AD CS ESC13, gMSA abuse, and Administrator access."
 pubDate: 2026-11-06
+heroImage: '/images/labs/kitsune.png'
 category: "Active Directory"
 difficulty: "Easy"
 
