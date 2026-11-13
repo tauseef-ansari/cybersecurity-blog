@@ -2,6 +2,7 @@
 title: "Five Ways to Collect BloodHound Data in Active Directory"
 description: "Hands-on comparison of NetExec, SharpHound, RustHound-CE, BloodHound.py and bloodyAD, followed by ACL abuse and a validated DCSync attack in a HackSmarter lab."
 pubDate: 2026-11-13
+heroImage: "/images/labs/bloodhound.png"
 category: "Active Directory"
 difficulty: "Easy"
 tags: ["Active Directory", "BloodHound", "Enumeration", "ACL", "DCSync", "HackSmarter"]
