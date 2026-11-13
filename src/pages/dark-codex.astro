@@ -1,0 +1,115 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const tools = [
+  { name: 'Nmap', category: 'Reconnaissance', description: 'Port discovery, service enumeration, and NSE scripts.', command: 'nmap -sV -sC -p- <target>', status: 'Field notes' },
+  { name: 'RustScan', category: 'Reconnaissance', description: 'Fast port discovery followed by targeted Nmap scanning.', command: 'rustscan -a <target> -- -sV', status: 'Field notes' },
+  { name: 'NetExec', category: 'Active Directory', description: 'SMB, LDAP, WinRM and domain enumeration workflows.', command: 'nxc smb <target> -u <user> -p <password>', status: 'Field notes' },
+  { name: 'BloodHound / RustHound', category: 'Active Directory', description: 'Collect directory relationships and investigate attack paths.', command: 'rusthound-ce -d <domain> -u <user> -p <password>', status: 'Field notes' },
+  { name: 'Certipy', category: 'Active Directory', description: 'Enumerate AD CS templates, permissions, and certificate risks.', command: 'certipy-ad find -u <user>@<domain> -p <password> -dc-ip <dc-ip>', status: 'Field notes' },
+  { name: 'Impacket', category: 'Active Directory', description: 'A collection of protocol-focused tools for Windows environments.', command: 'impacket-GetUserSPNs <domain>/<user>:<password> -dc-ip <dc-ip>', status: 'Field notes' },
+  { name: 'Hashcat', category: 'Password Attacks', description: 'Offline password auditing, hash modes, and rule-based wordlists.', command: 'hashcat -m <mode> <hash-file> <wordlist>', status: 'Full guide', href: '/dark-codex/hashcat' },
+  { name: 'John the Ripper', category: 'Password Attacks', description: 'Hash format detection and offline password auditing.', command: 'john --wordlist=<wordlist> <hash-file>', status: 'Field notes' },
+];
+const categories = ['All tools', ...new Set(tools.map((tool) => tool.category))];
+---
+<!doctype html>
+<html lang="en">
+  <head><BaseHead title="The Dark Codex | PentestBlueprint" description="A growing collection of practical cybersecurity tool notes, commands and techniques from PentestBlueprint." /></head>
+  <body>
+    <Header />
+    <main class="notebook-page">
+      <section class="intro">
+        <p class="eyebrow">PENTESTBLUEPRINT / FIELD REFERENCE</p>
+        <h1>The Dark <span>Codex.</span></h1>
+        <p class="subtitle">Tools. Commands. Techniques. Tradecraft. An evolving collection of offensive security tools, practical commands, and lessons learned from the lab.</p>
+        <div class="stats"><span><strong>{tools.length}</strong> tools indexed</span><span><strong>{categories.length - 1}</strong> disciplines</span><span class="live-dot">Always learning</span></div>
+      </section>
+      <section class="toolbar" aria-label="Filter tools">
+        <label class="search-label" for="tool-search">Search the codex</label>
+        <input id="tool-search" type="search" placeholder="Search tools, commands, or techniques…" />
+        <label class="search-label" for="tool-category">Discipline</label>
+        <select id="tool-category">{categories.map((category) => <option value={category}>{category}</option>)}</select>
+      </section>
+      <p class="result-count" id="result-count">{tools.length} entries</p>
+      <section class="tool-grid" aria-label="Tools reference">
+        {tools.map((tool, index) => (
+          <article class="tool-card" data-category={tool.category} data-search={`${tool.name} ${tool.description} ${tool.command} ${tool.category}`.toLowerCase()}>
+            <div class="card-top"><span class="number">REF / {String(index + 1).padStart(2, '0')}</span><span class="category">{tool.category}</span></div>
+            <h2>{tool.href ? <a href={tool.href}>{tool.name} ↗</a> : tool.name}</h2>
+            <p>{tool.description}</p>
+            <div class="terminal"><span class="prompt">$</span><code>{tool.command}</code></div>
+            <div class="card-footer"><span class="status"><span class="dot"></span>{tool.status}</span>{tool.href ? <a class="read-guide" href={tool.href}>READ GUIDE ↗</a> : <span>REFERENCE NOTE</span>}</div>
+          </article>
+        ))}
+      </section>
+      <p id="no-results" hidden>No matching notes. Try another search or category.</p>
+      <aside class="closing"><span class="eyebrow">BUILT ONE LAB AT A TIME</span><h2>Understand the tool.<br /><span>Document the why.</span></h2><p>These are quick-reference starting points, not complete tutorials. Detailed walkthroughs can be added as individual notes as the codex grows.</p><a href="/lab-writeups">Explore lab writeups ↗</a></aside>
+    </main>
+    <Footer />
+    <script>
+      const search = document.querySelector<HTMLInputElement>('#tool-search');
+      const category = document.querySelector<HTMLSelectElement>('#tool-category');
+      const cards = document.querySelectorAll<HTMLElement>('.tool-card');
+      const count = document.querySelector<HTMLElement>('#result-count');
+      const empty = document.querySelector<HTMLElement>('#no-results');
+      const filter = () => {
+        const term = (search?.value ?? '').trim().toLowerCase();
+        const selected = category?.value ?? 'All tools';
+        let visible = 0;
+        cards.forEach(card => {
+          const matches = (selected === 'All tools' || card.dataset.category === selected) && (card.dataset.search ?? '').includes(term);
+          card.hidden = !matches;
+          if (matches) visible++;
+        });
+        if (count) count.textContent = `${visible} ${visible === 1 ? 'entry' : 'entries'}`;
+        if (empty) empty.hidden = visible !== 0;
+      };
+      search?.addEventListener('input', filter);
+      category?.addEventListener('change', filter);
+    </script>
+  </body>
+</html>
+<style>
+  .notebook-page { width: min(1160px, calc(100% - 48px)); margin: 0 auto; padding: 0 0 96px; }
+  .intro { padding: 74px 0 44px; }
+  .eyebrow { color: #9cff57; font: 700 11px ui-monospace, Consolas, monospace; letter-spacing: 2px; }
+  h1 { font-size: clamp(40px, 6vw, 76px); letter-spacing: -.055em; line-height: 1.07; margin: 18px 0 20px; }
+  h1 span, .closing h2 span { color: #9cff57; }
+  .subtitle { color: #b7c8d9; max-width: 710px; line-height: 1.8; font-size: 17px; }
+  .stats { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+  .stats > span { border: 1px solid #29403b; border-radius: 40px; padding: 8px 14px; color: #b8c8d7; font-size: 12px; }
+  .stats strong { color: #9cff57; font-size: 15px; }
+  .live-dot::before, .dot { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #9cff57; }
+  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; background: #101612; border: 1px solid #263329; padding: 18px; border-radius: 12px; }
+  .search-label { font-size: 12px; color: #aab7ac; font-weight: 700; }
+  input, select { min-width: 180px; flex: 1; padding: 12px; border: 1px solid #33423b; background: #080b0a; color: #f0f4ef; border-radius: 8px; font: inherit; font-size: 13px; }
+  input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid #9cff57; outline-offset: 3px; }
+  .result-count { color: #98a99d; font-size: 12px; margin: 22px 0 14px; }
+  .tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .tool-card { min-width: 0; display: flex; flex-direction: column; border: 1px solid #263329; border-radius: 14px; padding: 24px; background: linear-gradient(145deg, #142018, #101612 65%); transition: transform .2s, border-color .2s; }
+  .tool-card:hover { transform: translateY(-3px); border-color: #9cff57; }
+  .tool-card[hidden], #no-results[hidden] { display: none; }
+  .card-top, .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .number { color: #758b7c; font: 11px ui-monospace, monospace; }
+  .category { color: #9cff57; background: #203321; border-radius: 20px; padding: 6px 10px; font-size: 11px; }
+  .tool-card h2 { margin: 24px 0 8px; color: #f4f7f4; font-size: 23px; }
+  .tool-card > p { color: #b6c4ba; font-size: 14px; line-height: 1.7; flex: 1; }
+  .terminal { margin-top: 22px; padding: 15px; background: #080d0b; border: 1px solid #263329; border-radius: 8px; display: flex; gap: 10px; overflow-x: auto; }
+  .prompt { color: #9cff57; }
+  code { color: #d2e3d4; font-size: 11px; white-space: pre; }
+  .card-footer { margin-top: 22px; padding-top: 16px; border-top: 1px solid #263329; color: #7f9987; font: 10px ui-monospace, monospace; letter-spacing: .5px; }
+  .status { color: #b8c8bb; }
+  .tool-card h2 a { color: inherit; text-decoration: none; }
+  .tool-card h2 a:hover, .read-guide:hover { color: #9cff57; }
+  .read-guide { color: #9cff57; text-decoration: none; }
+  .closing { margin-top: 65px; padding: 40px; border: 1px solid #2e4933; border-radius: 16px; background: #101b15; }
+  .closing h2 { margin: 14px 0; font-size: clamp(28px, 4vw, 44px); line-height: 1.2; }
+  .closing p { max-width: 650px; color: #aebeb1; font-size: 14px; line-height: 1.8; }
+  .closing a { display: inline-block; margin-top: 20px; color: #9cff57; font-weight: 700; text-decoration: none; }
+  #no-results { padding: 35px; text-align: center; color: #aebeb1; }
+  @media (max-width: 700px) { .tool-grid { grid-template-columns: 1fr; } .intro { padding-top: 42px; } .toolbar { align-items: stretch; flex-direction: column; } input, select { width: 100%; flex: auto; } .closing { padding: 25px; } }
+  @media (prefers-reduced-motion: reduce) { .tool-card { transition: none; } }
+</style>
