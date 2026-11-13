@@ -2,7 +2,7 @@
 title: "Kerberoasting in Active Directory: Four Practical Attack Techniques"
 description: "A hands-on HackSmarter lab exploring standard and targeted Kerberoasting, AS-REP Roasting, and roasting with a no-preauthentication account using NetExec and Hashcat."
 pubDate: 2026-11-13
-heroImage: "/images/kerberoasting/kerb.png"
+heroImage: "/images/kerberoasting/kerberoasting-cover.png"
 category: "Active Directory"
 difficulty: "Easy"
 ---
