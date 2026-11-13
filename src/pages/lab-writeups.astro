@@ -185,4 +185,49 @@ const sortedPosts = posts.sort(
   @media (prefers-reduced-motion: reduce) {
     .writeup-card, .card-image img { transition: none; }
   }
+
+/* Compact Lab Writeups header */
+.page-hero,
+.hero,
+.page-header {
+  padding-top: 36px;
+  padding-bottom: 28px;
+  min-height: 0;
+}
+
+.page-hero h1,
+.hero h1,
+.page-header h1 {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.page-hero p,
+.hero p,
+.page-header p {
+  margin-bottom: 0;
+}
+
+/* Bring filters and writeups closer */
+.filters,
+.filter-bar,
+.filters-section {
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+/* Reduce excess vertical spacing */
+main {
+  padding-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .page-hero,
+  .hero,
+  .page-header {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+}
+
 </style>
