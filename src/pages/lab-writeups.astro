@@ -65,8 +65,9 @@ const sortedPosts = posts.sort(
             data-category={post.data.category}
             data-difficulty={post.data.difficulty}
           >
+            <a class="card-link" href={`/blog/${post.id}/`} aria-label={`Read ${post.data.title} writeup`}>
             {post.data.heroImage ? (
-              <a class="card-image" href={`/blog/${post.id}/`} aria-label={`Read ${post.data.title}`}>
+              <div class="card-image">
                 <img
                   src={post.data.heroImage}
                   alt={`${post.data.title} cover illustration`}
@@ -75,7 +76,7 @@ const sortedPosts = posts.sort(
                   width="720"
                   height="360"
                 />
-              </a>
+              </div>
             ) : (
               <div class="card-image card-image-fallback" aria-hidden="true">
                 <span>{post.data.category === 'Active Directory' ? 'AD' : post.data.category}</span>
@@ -88,15 +89,16 @@ const sortedPosts = posts.sort(
                   {post.data.difficulty}
                 </span>
               </div>
-              <h2><a href={`/blog/${post.id}/`}>{post.data.title}</a></h2>
+              <h2>{post.data.title}</h2>
               <p class="description">{post.data.description}</p>
               <div class="card-bottom">
                 <time datetime={post.data.pubDate.toISOString()}>
                   <FormattedDate date={post.data.pubDate} />
                 </time>
-                <a href={`/blog/${post.id}/`}>Read writeup →</a>
+                <span class="read-link">Read writeup →</span>
               </div>
             </div>
+            </a>
           </article>
         ))}
       </section>
@@ -156,6 +158,8 @@ const sortedPosts = posts.sort(
   .results-info { margin: 14px 0 12px; color: #a0aaa2; font-size: 13px; }
   .writeups-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .writeup-card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: #101612; border: 1px solid #263329; border-radius: 10px; transition: border-color .2s, transform .2s; }
+  .card-link { display: flex; flex-direction: column; flex: 1; min-width: 0; color: inherit; text-decoration: none; }
+  .card-link:focus-visible { outline: 2px solid #9cff57; outline-offset: -3px; }
   .writeup-card:hover { border-color: #9cff57; transform: translateY(-3px); }
   .writeup-card[hidden], #empty-message[hidden] { display: none; }
   .card-image { display: block; width: 100%; height: 205px; overflow: hidden; background: #080b0a; border-bottom: 1px solid #263329; }
@@ -177,7 +181,7 @@ const sortedPosts = posts.sort(
   .description { flex: 1; font-size: 14px; }
   .card-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #263329; font-size: 12px; }
   .card-bottom time { color: #a0aaa2; }
-  .card-bottom a { font-weight: 700; }
+  .card-bottom .read-link { color: #9cff57; font-weight: 700; }
   #empty-message { margin: 35px 0; text-align: center; }
   @media (max-width: 650px) {
     .writeups-grid { grid-template-columns: 1fr; }

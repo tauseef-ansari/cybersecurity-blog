@@ -37,12 +37,14 @@ const categories = ['All tools', ...new Set(tools.map((tool) => tool.category))]
       <section class="tool-grid" aria-label="Tools reference">
         {tools.map((tool, index) => (
           <article class="tool-card" data-category={tool.category} data-search={`${tool.name} ${tool.description} ${tool.command} ${tool.category}`.toLowerCase()}>
-            <a class="tool-cover" href={tool.href} aria-label={`Read ${tool.name} cheatsheet`}><img src={tool.image} alt={`${tool.name} cover`} loading="lazy" width="768" height="256" /></a>
+            <a class="card-link" href={tool.href} aria-label={`Read ${tool.name} cheatsheet`}>
+            <div class="tool-cover"><img src={tool.image} alt={`${tool.name} cover`} loading="lazy" width="768" height="256" /></div>
             <div class="card-inner"><div class="card-top"><span class="number">REF / {String(index + 1).padStart(2, '0')}</span><span class="category">{tool.category}</span></div>
-            <h2>{tool.href ? <a href={tool.href}>{tool.name} ↗</a> : tool.name}</h2>
+            <h2>{tool.name} ↗</h2>
             <p>{tool.description}</p>
             <div class="terminal"><span class="prompt">$</span><code>{tool.command}</code></div>
-            <div class="card-footer"><span class="status"><span class="dot"></span>{tool.status}</span>{tool.href ? <a class="read-guide" href={tool.href}>READ GUIDE ↗</a> : <span>REFERENCE NOTE</span>}</div></div>
+            <div class="card-footer"><span class="status"><span class="dot"></span>{tool.status}</span><span class="read-guide">READ GUIDE ↗</span></div></div>
+            </a>
           </article>
         ))}
       </section>
@@ -91,6 +93,8 @@ const categories = ['All tools', ...new Set(tools.map((tool) => tool.category))]
   .result-count { color: #98a99d; font-size: 12px; margin: 22px 0 14px; }
   .tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .tool-card { min-width: 0; display: flex; flex-direction: column; border: 1px solid #263329; border-radius: 14px; padding: 0; overflow: hidden; background: linear-gradient(145deg, #142018, #101612 65%); transition: transform .2s, border-color .2s; }
+  .card-link { display:flex; flex-direction:column; flex:1; min-width:0; color:inherit; text-decoration:none; }
+  .card-link:focus-visible { outline:2px solid #9cff57; outline-offset:-3px; }
   .tool-card:hover { transform: translateY(-3px); border-color: #9cff57; }
   .tool-card[hidden], #no-results[hidden] { display: none; }
   .tool-cover { display:block; height: 175px; overflow:hidden; border-bottom:1px solid #263329; }
