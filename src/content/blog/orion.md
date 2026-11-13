@@ -2,7 +2,7 @@
 title: 'Orion: From Guest SMB Access to Domain Compromise'
 description: 'An easy HackSmarter Active Directory lab chaining a writable SMB share, Kerberoasting, delegated permissions, Shadow Credentials, exposed secrets, and AD CS ESC1.'
 pubDate: '2026-11-12'
-heroImage: '/images/orion/onion.png'
+heroImage: '/images/labs/orion.png'
 category: 'Active Directory'
 difficulty: 'Easy'
 ---
