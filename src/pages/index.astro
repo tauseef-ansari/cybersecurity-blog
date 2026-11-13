@@ -82,7 +82,11 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
           <div class="post-grid">
             {latestPosts.map((post, index) => (
               <a class="post-card" href={postUrl(post.id)}>
-                <div class="card-art" aria-hidden="true"><span class="card-grid"></span><span class="card-monogram">{post.data.category === 'Active Directory' ? 'AD' : post.data.category}</span><span class="card-index">FIELD NOTE / {String(index + 1).padStart(2, '0')}</span><span class="card-arrow">↗</span></div>
+                <div class="card-art" aria-hidden="true">{post.data.heroImage ? (
+                    <img class="card-cover" src={post.data.heroImage} alt={`${post.data.title} cover`} loading="lazy" decoding="async" />
+                  ) : (
+                    <><span class="card-grid"></span><span class="card-monogram">{post.data.category === 'Active Directory' ? 'AD' : post.data.category}</span></>
+                  )}<span class="card-index">FIELD NOTE / {String(index + 1).padStart(2, '0')}</span><span class="card-arrow">↗</span></div>
                 <div class="card-body"><div class="card-meta"><span>{post.data.category}</span><span class:list={['difficulty', post.data.difficulty.toLowerCase()]}>{post.data.difficulty}</span></div><h3>{post.data.title}</h3><p>{post.data.description}</p><div class="card-footer"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>Read the story <span aria-hidden="true">→</span></span></div></div>
               </a>
             ))}
@@ -187,10 +191,12 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
   .card-art { height: 180px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 80% 70%, #2b52784f, transparent), #102644; }
   .post-card:nth-child(2) .card-art { background-color: #142d30; }
   .post-card:nth-child(3) .card-art { background-color: #242645; }
+  .card-cover { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .card-art::after { content: ""; position: absolute; inset: 45% 0 0; background: linear-gradient(transparent, #07132699); pointer-events: none; }
   .card-grid { position: absolute; inset: 0; background-image: linear-gradient(#b4cbef12 1px,transparent 1px),linear-gradient(90deg,#b4cbef12 1px,transparent 1px); background-size: 22px 22px; transform: rotate(-12deg) scale(1.4); }
   .card-monogram { position: absolute; left: 24px; top: 14px; font: 700 clamp(30px, 4vw, 58px)/1.6 ui-monospace, monospace; color: #a6ff64be; letter-spacing: -3px; }
-  .card-index { position: absolute; left: 26px; bottom: 19px; color: #b6c9e1; font: 9px ui-monospace, monospace; letter-spacing: 1px; }
-  .card-arrow { position: absolute; top: 20px; right: 20px; color: var(--lime); font-size: 24px; }
+  .card-index { z-index: 1; position: absolute; left: 26px; bottom: 19px; color: #b6c9e1; font: 9px ui-monospace, monospace; letter-spacing: 1px; }
+  .card-arrow { z-index: 1; position: absolute; top: 20px; right: 20px; color: var(--lime); font-size: 24px; }
   .card-body { display: flex; flex-direction: column; flex: 1; padding: 23px; }
   .card-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; color: #bdcce1; font: 10px ui-monospace, monospace; }
   .difficulty { padding: 3px 9px; border: 1px solid #ffffff26; border-radius: 20px; }
