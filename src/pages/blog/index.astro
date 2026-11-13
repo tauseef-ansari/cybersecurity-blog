@@ -2,110 +2,171 @@
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import { SITE_TITLE } from '../../consts';
 import { getCollection } from 'astro:content';
-import FormattedDate from '../../components/FormattedDate.astro';
 
 const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+const categories = ['Active Directory', 'Windows', 'Linux', 'Web', 'AWS'];
+const difficulties = ['Easy', 'Medium', 'Hard'];
+const dateLabel = (date: Date) => date.toLocaleDateString('en-US', {
+  year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
+});
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									<img width={720} height={360} src={post.data.heroImage} alt="" />
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
-		</main>
-		<Footer />
-	</body>
+  <head>
+    <BaseHead title={`Lab Writeups | ${SITE_TITLE}`} description="Explore hands-on penetration testing lab writeups, categorized by technology and difficulty." />
+  </head>
+  <body>
+    <Header />
+    <main class="lab-page">
+      <div class="page-heading">
+        <p class="eyebrow">FIELD NOTES / HANDS-ON LABS</p>
+        <h1>Lab <span>Writeups.</span></h1>
+        <p class="intro">Real-world attack paths, enumeration techniques, and lessons learned — documented one lab at a time.</p>
+      </div>
+
+      <section class="lab-section" aria-label="Browse lab writeups">
+        <div class="filter-panel">
+          <div class="filter-field">
+            <label for="category-filter">Category</label>
+            <select id="category-filter">
+              <option value="all">All Categories</option>
+              {categories.map((category) => <option value={category.toLowerCase()}>{category}</option>)}
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="difficulty-filter">Difficulty</label>
+            <select id="difficulty-filter">
+              <option value="all">All Difficulties</option>
+              {difficulties.map((difficulty) => <option value={difficulty.toLowerCase()}>{difficulty}</option>)}
+            </select>
+          </div>
+          <button id="clear-filters" type="button">Clear filters ↺</button>
+        </div>
+
+        <div class="result-heading">
+          <h2>Explore the labs</h2>
+          <p id="result-count" aria-live="polite">{posts.length} {posts.length === 1 ? 'writeup' : 'writeups'}</p>
+        </div>
+
+        <div class="post-grid" id="post-grid">
+          {posts.map((post, index) => (
+            <article
+              class="post-card"
+              data-category={String(post.data.category ?? '').toLowerCase()}
+              data-difficulty={String(post.data.difficulty ?? '').toLowerCase()}
+            >
+              <a class="card-link" href={`/blog/${post.id}/`} aria-label={`Read ${post.data.title}`}>
+                <div class="card-art">
+                  {post.data.heroImage ? (
+                    <img src={post.data.heroImage} alt="" loading={index < 3 ? 'eager' : 'lazy'} />
+                  ) : (
+                    <div class="card-placeholder" aria-hidden="true"><span>{post.data.category || 'LAB'}</span></div>
+                  )}
+                  <span class="card-arrow" aria-hidden="true">↗</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-meta">
+                    <span class="category-tag">{post.data.category || 'Lab'}</span>
+                    {post.data.difficulty && <span class={`difficulty-tag ${String(post.data.difficulty).toLowerCase()}`}>{post.data.difficulty}</span>}
+                  </div>
+                  <h3>{post.data.title}</h3>
+                  {post.data.description && <p class="description">{post.data.description}</p>}
+                  <div class="card-footer">
+                    <time datetime={post.data.pubDate.toISOString()}>{dateLabel(post.data.pubDate)}</time>
+                    <span>Read writeup →</span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+        <div class="empty-state" id="empty-state" hidden>
+          <h3>No matching writeups</h3>
+          <p>Try another category or difficulty, or clear the filters.</p>
+        </div>
+      </section>
+    </main>
+    <Footer />
+    <script>
+      const categoryFilter = document.querySelector<HTMLSelectElement>('#category-filter');
+      const difficultyFilter = document.querySelector<HTMLSelectElement>('#difficulty-filter');
+      const clearButton = document.querySelector<HTMLButtonElement>('#clear-filters');
+      const resultCount = document.querySelector<HTMLElement>('#result-count');
+      const emptyState = document.querySelector<HTMLElement>('#empty-state');
+      const cards = Array.from(document.querySelectorAll<HTMLElement>('.post-card'));
+
+      function updateFilters() {
+        const category = categoryFilter?.value ?? 'all';
+        const difficulty = difficultyFilter?.value ?? 'all';
+        let visible = 0;
+        for (const card of cards) {
+          const categoryMatch = category === 'all' || card.dataset.category === category;
+          const difficultyMatch = difficulty === 'all' || card.dataset.difficulty === difficulty;
+          const show = categoryMatch && difficultyMatch;
+          card.hidden = !show;
+          if (show) visible++;
+        }
+        if (resultCount) resultCount.textContent = `${visible} ${visible === 1 ? 'writeup' : 'writeups'}`;
+        if (emptyState) emptyState.hidden = visible !== 0;
+      }
+      categoryFilter?.addEventListener('change', updateFilters);
+      difficultyFilter?.addEventListener('change', updateFilters);
+      clearButton?.addEventListener('click', () => {
+        if (categoryFilter) categoryFilter.value = 'all';
+        if (difficultyFilter) difficultyFilter.value = 'all';
+        updateFilters();
+      });
+    </script>
+  </body>
 </html>
+
+<style>
+  .lab-page { width: min(1200px, calc(100% - 48px)); margin: 0 auto; padding: 68px 0 110px; }
+  .page-heading { margin-bottom: 42px; }
+  .eyebrow { margin: 0 0 12px; color: #a6ff64; font: 11px ui-monospace, Consolas, monospace; letter-spacing: 2px; }
+  h1 { margin: 0 0 16px; font-size: clamp(40px, 5vw, 64px); line-height: 1.12; letter-spacing: -2px; color: #f3f6fc; }
+  h1 span { color: #a6ff64; }
+  .intro { max-width: 700px; margin: 0; color: #afbdd1; font-size: 16px; line-height: 1.8; }
+  .filter-panel { display: flex; align-items: end; flex-wrap: wrap; gap: 20px; padding: 22px 24px; border: 1px solid #a6ff6440; border-radius: 14px; background: #0d1e36; }
+  .filter-field { display: flex; flex-direction: column; gap: 9px; flex: 1 1 220px; }
+  label { color: #e4ecf8; font-size: 13px; font-weight: 650; }
+  select { width: 100%; min-height: 44px; padding: 10px 36px 10px 14px; border: 1px solid #ffffff2b; border-radius: 9px; background: #071326; color: #f3f6fc; font: inherit; font-size: 13px; cursor: pointer; }
+  select:focus-visible, button:focus-visible, .card-link:focus-visible { outline: 2px solid #a6ff64; outline-offset: 3px; }
+  #clear-filters { min-height: 44px; padding: 9px 12px; border: 0; background: transparent; color: #a6ff64; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+  #clear-filters:hover { text-decoration: underline; }
+  .result-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 48px 0 22px; }
+  .result-heading h2 { margin: 0; font-size: 23px; color: #f3f6fc; }
+  .result-heading p { margin: 0; color: #afbdd1; font-size: 13px; }
+  .post-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+  .post-card { min-width: 0; overflow: hidden; border: 1px solid #ffffff1c; border-radius: 15px; background: #0c1b30; transition: transform .2s, border-color .2s; }
+  .post-card[hidden], .empty-state[hidden] { display: none !important; }
+  .post-card:hover { transform: translateY(-5px); border-color: #a6ff6480; }
+  .card-link { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
+  .card-art { position: relative; height: 180px; overflow: hidden; background: #102644; }
+  .card-art img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .25s; }
+  .post-card:hover .card-art img { transform: scale(1.04); }
+  .card-placeholder { display: grid; place-items: center; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent 0 24px, #a6ff640d 25px), #102644; }
+  .card-placeholder span { color: #a6ff64; font: 700 22px ui-monospace, Consolas, monospace; }
+  .card-arrow { position: absolute; top: 12px; right: 14px; color: #a6ff64; font-size: 24px; text-shadow: 0 2px 8px #071326; }
+  .card-body { display: flex; flex: 1; flex-direction: column; padding: 22px; }
+  .card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+  .category-tag, .difficulty-tag { padding: 5px 10px; border-radius: 20px; background: #ffffff12; color: #dbe5f3; font: 10px ui-monospace, Consolas, monospace; }
+  .difficulty-tag.easy { color: #a6ff64; background: #a6ff6419; }
+  .difficulty-tag.medium { color: #ffe087; background: #ffe0871a; }
+  .difficulty-tag.hard { color: #ffa6b2; background: #ffa6b21a; }
+  h3 { margin: 0 0 12px; color: #f3f6fc; font-size: 19px; line-height: 1.4; }
+  .description { margin: 0 0 22px; color: #afbdd1; font-size: 13px; line-height: 1.75; }
+  .card-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: auto; padding-top: 15px; border-top: 1px solid #ffffff1c; color: #a7b9d1; font-size: 11px; }
+  .card-footer span { color: #a6ff64; }
+  .empty-state { padding: 50px 24px; border: 1px dashed #ffffff35; border-radius: 15px; text-align: center; }
+  .empty-state h3 { margin-bottom: 8px; }
+  .empty-state p { margin: 0; color: #afbdd1; }
+  @media (max-width: 950px) { .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 620px) { .lab-page { width: calc(100% - 36px); padding: 42px 0 70px; } .filter-panel { padding: 18px; gap: 14px; } .filter-field { flex-basis: 100%; } .post-grid { grid-template-columns: 1fr; } .result-heading { margin-top: 36px; } }
+  @media (prefers-reduced-motion: reduce) { .post-card, .card-art img { transition: none; } }
+</style>
