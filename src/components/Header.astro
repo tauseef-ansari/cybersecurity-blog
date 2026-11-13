@@ -1,24 +1,5 @@
----
-const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/';
 
-const links = [
-  {
-    href: '/lab-writeups',
-    label: 'Lab Writeups',
-    active:
-      pathname === '/lab-writeups' ||
-      pathname.startsWith('/lab-writeups/') ||
-      pathname === '/blog' ||
-      pathname.startsWith('/blog/'),
-  },
-  {
-    href: '/tools-techniques',
-    label: 'Tools & Techniques',
-    active:
-      pathname === '/tools-techniques' ||
-      pathname.startsWith('/tools-techniques/'),
-  },
-];
+---
 ---
 
 <header class="site-header">
@@ -33,22 +14,6 @@ const links = [
         <small>FIELD NOTES FROM THE LAB</small>
       </span>
     </a>
-
-    <div class="internal-links">
-      {
-        links.map((link) => (
-          <a
-            href={link.href}
-            class:list={['nav-link', { active: link.active }]}
-            aria-current={
-              pathname === link.href ? 'page' : undefined
-            }
-          >
-            {link.label}
-          </a>
-        ))
-      }
-    </div>
   </nav>
 </header>
 
@@ -67,8 +32,7 @@ const links = [
   .header-inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 28px;
+    justify-content: flex-start;
     width: min(1400px, calc(100% - 96px));
     min-height: 104px;
     margin: 0 auto;
@@ -127,53 +91,7 @@ const links = [
     letter-spacing: 2px;
   }
 
-  .internal-links {
-    display: flex;
-    align-items: center;
-    gap: 34px;
-  }
-
-  .nav-link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 8px 0;
-    color: #afbdd1;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.5;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color 0.2s;
-  }
-
-  .nav-link::after {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 2px;
-    border-radius: 2px;
-    background: #a6ff64;
-    content: '';
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.2s;
-  }
-
-  .nav-link:hover,
-  .nav-link.active {
-    color: #a6ff64;
-  }
-
-  .nav-link:hover::after,
-  .nav-link.active::after {
-    transform: scaleX(1);
-  }
-
-  .brand:focus-visible,
-  .nav-link:focus-visible {
+  .brand:focus-visible {
     outline: 3px solid #a6ff64;
     outline-offset: 6px;
     border-radius: 4px;
@@ -187,8 +105,6 @@ const links = [
 
   @media (max-width: 560px) {
     .header-inner {
-      flex-wrap: wrap;
-      gap: 20px;
       width: calc(100% - 40px);
       min-height: 0;
       padding: 20px 0;
@@ -196,23 +112,6 @@ const links = [
 
     .brand {
       font-size: 18px;
-    }
-
-    .internal-links {
-      justify-content: space-between;
-      gap: 12px;
-      width: 100%;
-    }
-
-    .nav-link {
-      font-size: 12px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .nav-link,
-    .nav-link::after {
-      transition: none;
     }
   }
 </style>
