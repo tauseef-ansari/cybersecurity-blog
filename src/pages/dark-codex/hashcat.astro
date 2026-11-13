@@ -15,23 +15,32 @@ const hashModes = [
   {mode:'11600', name:'7-Zip', use:'Encrypted archive auditing'},
   {mode:'13400', name:'KeePass', use:'Password vault auditing'},
 ];
-const commonCommands = [
-  {title:'NTLM — Windows password hashes',detail:'Common after authorized Windows or AD credential-dump exercises.',cmd:'hashcat -m 1000 -a 0 ntlm.txt /usr/share/wordlists/rockyou.txt'},
-  {title:'NetNTLMv2 — challenge-response',detail:'Use for NetNTLMv2 captures, not raw NTLM hashes.',cmd:'hashcat -m 5600 -a 0 netntlmv2.txt /usr/share/wordlists/rockyou.txt'},
-  {title:'Kerberoasting — TGS etype 23',detail:'Use when a lab produces a $krb5tgs$23$ ticket hash.',cmd:'hashcat -m 13100 -a 0 tgs.txt /usr/share/wordlists/rockyou.txt'},
-  {title:'AS-REP roasting — etype 23',detail:'Use when a lab produces a $krb5asrep$23$ hash.',cmd:'hashcat -m 18200 -a 0 asrep.txt /usr/share/wordlists/rockyou.txt'},
-  {title:'MD5 — simple hash challenges',detail:'Useful for basic CTF and legacy digest exercises.',cmd:'hashcat -m 0 -a 0 md5.txt /usr/share/wordlists/rockyou.txt'},
-  {title:'Linux sha512crypt',detail:'Common $6$-prefixed password hashes in Linux exercises.',cmd:'hashcat -m 1800 -a 0 linux.txt /usr/share/wordlists/rockyou.txt'},
+const attacks = [
+  {id:'0',title:'Dictionary',desc:'Try candidates from a wordlist.',cmd:'hashcat -m 1000 -a 0 ntlm.txt wordlist.txt'},
+  {id:'1',title:'Combinator',desc:'Join words from two wordlists.',cmd:'hashcat -m 1000 -a 1 ntlm.txt first.txt second.txt'},
+  {id:'3',title:'Mask',desc:'Generate candidates using a known pattern.',cmd:'hashcat -m 1000 -a 3 ntlm.txt ?u?l?l?l?d?d'},
+  {id:'6',title:'Hybrid: wordlist + mask',desc:'Append generated characters to wordlist entries.',cmd:'hashcat -m 1000 -a 6 ntlm.txt wordlist.txt ?d?d'},
+  {id:'7',title:'Hybrid: mask + wordlist',desc:'Prepend generated characters to wordlist entries.',cmd:'hashcat -m 1000 -a 7 ntlm.txt ?d?d wordlist.txt'},
 ];
-const everydayCommands = [
-  {title:'Display recovered passwords',cmd:'hashcat -m 1000 --show ntlm.txt'},
-  {title:'Save results to a text file',cmd:'hashcat -m 1000 -a 0 ntlm.txt /usr/share/wordlists/rockyou.txt -o cracked.txt'},
-  {title:'Check installed hash modes',cmd:'hashcat --help'},
-  {title:'See a valid example for a mode',cmd:'hashcat -m 5600 --example-hashes'},
+const masks = [
+  {token:'?l',meaning:'Lowercase letters'}, {token:'?u',meaning:'Uppercase letters'},
+  {token:'?d',meaning:'Digits 0–9'}, {token:'?s',meaning:'Special characters'},
+  {token:'?a',meaning:'Lowercase, uppercase, digits, symbols'},
+  {token:'?h',meaning:'Lowercase hexadecimal'}, {token:'?H',meaning:'Uppercase hexadecimal'},
+  {token:'?b',meaning:'All byte values (0x00–0xff)'},
+];
+const commands = [
+  {title:'Show recovered results',cmd:'hashcat -m 1000 --show ntlm.txt'},
+  {title:'Show remaining hashes',cmd:'hashcat -m 1000 --left ntlm.txt'},
+  {title:'Name a session',cmd:'hashcat --session lab-audit -m 1000 -a 0 ntlm.txt wordlist.txt'},
+  {title:'Restore an interrupted session',cmd:'hashcat --session lab-audit --restore'},
+  {title:'Save recovered pairs to a file',cmd:'hashcat -m 1000 -a 0 ntlm.txt wordlist.txt -o recovered.txt'},
+  {title:'Limit runtime to 10 minutes',cmd:'hashcat --runtime=600 -m 1000 -a 0 ntlm.txt wordlist.txt'},
+  {title:'Check available modes and syntax',cmd:'hashcat --help'},
 ];
 ---
 <html lang="en">
-  <head><BaseHead title="Hashcat | The Dark Codex | PentestBlueprint" description="A practical Hashcat guide: hash modes, common lab commands, hash modes, recovered results, troubleshooting and Active Directory password auditing, with credit to Black Hills Information Security." /></head>
+  <head><BaseHead title="Hashcat | The Dark Codex | PentestBlueprint" description="A practical Hashcat guide: hash modes, dictionary attacks, mask patterns, session controls and Active Directory password auditing, with credit to Black Hills Information Security." /></head>
   <body>
     <Header />
     <main class="codex-entry">
@@ -39,7 +48,7 @@ const everydayCommands = [
       <header class="hero">
         <p class="eyebrow">THE DARK CODEX / CREDENTIAL AUDITING</p>
         <h1>Hash<span>cat.</span></h1>
-        <p class="lead">A field guide to offline password auditing: choose the right hash mode, run common lab commands, review recovered passwords, and troubleshoot errors.</p>
+        <p class="lead">A field guide to offline password auditing: choose the right hash mode, understand candidate generation, and keep your workflow reproducible.</p>
         <div class="tags"><span>OFFLINE AUDITING</span><span>GPU ACCELERATION</span><span>AD LABS</span></div>
         <img class="hero-art" src="/images/dark-codex/hashcat.png" alt="Hashcat Dark Codex cover illustration" width="768" height="256" loading="eager" />
       </header>
@@ -54,13 +63,14 @@ const everydayCommands = [
         <article class="content">
           <section id="overview"><p class="eyebrow">01 / FOUNDATION</p><h2>What Hashcat does</h2><p>Hashcat tests password candidates against captured hashes <strong>offline</strong>. It does not log into the target service: it computes and compares candidates locally. The hash type determines the <code>-m</code> mode; the candidate-generation method determines the <code>-a</code> attack mode.</p><div class="terminal"><code>hashcat -m &lt;hash-mode&gt; -a &lt;attack-mode&gt; &lt;hash-file&gt; &lt;wordlist-or-mask&gt;</code></div><p>Only audit hashes from systems you own or have explicit permission to assess. Avoid uploading sensitive hash material to third-party sites.</p></section>
           <section id="modes"><p class="eyebrow">02 / REFERENCE</p><h2>Hash modes worth knowing</h2><p>These are selected entries from the BHIS reference, focused on common lab workflows. The full Hashcat mode catalog is much larger; check your installed version with <code>hashcat --help</code>.</p><div class="table-wrap"><table><thead><tr><th>Mode</th><th>Format</th><th>Where you might see it</th></tr></thead><tbody>{hashModes.map(item=><tr><td><code>{item.mode}</code></td><td>{item.name}</td><td>{item.use}</td></tr>)}</tbody></table></div><p class="hint">Important: NTLM (<code>1000</code>) and NetNTLMv2 (<code>5600</code>) are different formats. Do not select a mode based on the filename alone.</p></section>
-          <section id="lab-commands"><p class="eyebrow">03 / LAB ESSENTIALS</p><h2>Commands you will actually use</h2><p>Most labs start with an extracted hash and a wordlist. These examples use <code>-a 0</code> (dictionary attack) and Kali's common <code>rockyou.txt</code> path. Only test hashes from authorized environments.</p><div class="stack">{commonCommands.map(item=><div class="example"><h3>{item.title}</h3><p>{item.detail}</p><pre><code>{item.cmd}</code></pre></div>)}</div><p class="hint">On Kali, the wordlist may be compressed. If <code>rockyou.txt</code> is missing, check <code>/usr/share/wordlists/</code> for <code>rockyou.txt.gz</code>.</p></section>
-          <section id="everyday"><p class="eyebrow">04 / EVERYDAY COMMANDS</p><h2>Check results and save findings</h2><p>After a dictionary attempt, these are the small set of commands worth remembering. Replace <code>-m 1000</code> with the mode for your hash.</p><div class="stack">{everydayCommands.map(item=><div class="example"><h3>{item.title}</h3><pre><code>{item.cmd}</code></pre></div>)}</div></section>
-          <section id="troubleshooting"><p class="eyebrow">05 / TROUBLESHOOTING</p><h2>When Hashcat does not work</h2><div class="stack"><div class="example"><h3>No hashes loaded / Token length exception</h3><p>First verify the mode and the hash's exact format. Compare it against <code>hashcat -m 5600 --example-hashes</code> (or the appropriate mode). Some exports include extra usernames or delimiters.</p></div><div class="example"><h3>Exhausted</h3><p>The tested wordlist did not produce a match. This does not mean the hash is invalid or the password cannot be recovered.</p></div><div class="example"><h3>Already cracked</h3><p>Hashcat may have stored the recovered password in its potfile. Use <code>--show</code> with the correct mode and hash file to display it.</p></div><div class="example"><h3>Device or memory errors</h3><p>Check your GPU/CPU runtime and drivers, and run <code>hashcat -I</code> to inspect detected compute devices.</p></div></div></section>
-          <section id="ad"><p class="eyebrow">06 / FIELD CONTEXT</p><h2>Active Directory examples</h2><p>For AD labs, three formats are especially easy to confuse. Match the hash material to the correct mode before running a dictionary test.</p><div class="stack"><div class="example"><h3>NTLM hash</h3><pre><code>hashcat -m 1000 -a 0 ntlm.txt wordlist.txt</code></pre></div><div class="example"><h3>NetNTLMv2 challenge-response</h3><pre><code>hashcat -m 5600 -a 0 netntlmv2.txt wordlist.txt</code></pre></div><div class="example"><h3>Kerberos TGS-REP, etype 23</h3><pre><code>hashcat -m 13100 -a 0 tgs-etype23.txt wordlist.txt</code></pre></div><div class="example"><h3>Kerberos AS-REP, etype 23</h3><pre><code>hashcat -m 18200 -a 0 asrep-etype23.txt wordlist.txt</code></pre></div></div><p class="hint">These AD command examples are PentestBlueprint adaptations for authorized labs, not verbatim examples from the BHIS sheet.</p></section>
-          <section id="resources"><p class="eyebrow">07 / FURTHER READING</p><h2>Sources & credits</h2><p><strong>Primary reference:</strong> Black Hills Information Security, <em>Hashcat Cheatsheet</em> (2 pages). Written by Justin Wang; revised by Kent Ickler.</p><p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2020/09/HashcatCheatSheet.v2018.1b.pdf" target="_blank" rel="noopener noreferrer">BHIS linked Hashcat cheatsheet PDF ↗</a></p><p><a href="https://github.com/hashcat/hashcat" target="_blank" rel="noopener noreferrer">Official Hashcat GitHub repository ↗</a></p><p><a href="https://book.hacktricks.wiki/en/generic-methodologies-and-resources/brute-force.html" target="_blank" rel="noopener noreferrer">HackTricks — Brute Force reference ↗</a></p><p><a href="https://hashcat.net/wiki/doku.php?id=example_hashes" target="_blank" rel="noopener noreferrer">Hashcat — Official example hashes ↗</a></p><p>This page is an independently written learning resource. The BHIS name and authorship are credited for the source material; no endorsement is implied.</p></section>
+          <section id="attacks"><p class="eyebrow">03 / CANDIDATES</p><h2>Attack modes</h2><p>Attack modes describe how Hashcat generates guesses. The examples below use a sample NTLM hash file from an authorized lab.</p><div class="stack">{attacks.map(item=><div class="example"><div class="example-head"><span class="mode">-a {item.id}</span><h3>{item.title}</h3></div><p>{item.desc}</p><pre><code>{item.cmd}</code></pre></div>)}</div></section>
+          <section id="masks"><p class="eyebrow">04 / PATTERNS</p><h2>Mask character sets</h2><p>Mask tokens are useful when a password policy or lab clue narrows the candidate pattern.</p><div class="mask-grid">{masks.map(item=><div class="mask-item"><code>{item.token}</code><span>{item.meaning}</span></div>)}</div><div class="example"><h3>Example: one uppercase, three lowercase, two digits</h3><pre><code>hashcat -m 1000 -a 3 ntlm.txt ?u?l?l?l?d?d</code></pre><p>The mask controls the position and character class of each generated candidate.</p></div></section>
+          <section id="workflow"><p class="eyebrow">05 / PRACTICE</p><h2>A repeatable lab workflow</h2><ol><li><strong>Identify the format.</strong> Distinguish raw NTLM from NetNTLMv2 or Kerberos ticket material.</li><li><strong>Pick a compatible mode.</strong> Use the reference above, then confirm against <code>hashcat --help</code>.</li><li><strong>Start with informed candidates.</strong> Use a relevant wordlist before expanding to masks or hybrid modes.</li><li><strong>Save and resume.</strong> Give long-running sessions a name and restore them when needed.</li><li><strong>Review results carefully.</strong> Use <code>--show</code> and document what the finding says about password policy.</li></ol></section>
+          <section id="commands"><p class="eyebrow">06 / QUICK REFERENCE</p><h2>Useful commands and flags</h2><div class="stack">{commands.map(item=><div class="example"><h3>{item.title}</h3><pre><code>{item.cmd}</code></pre></div>)}</div><p>Other BHIS-listed options include <code>--username</code> (hash files prefixed with usernames), <code>--remove</code> (remove recovered hashes from the input file), and <code>-b</code> (benchmark). Use <code>--remove</code> carefully because it changes the input file.</p></section>
+          <section id="ad"><p class="eyebrow">07 / FIELD CONTEXT</p><h2>Active Directory examples</h2><p>For AD labs, three formats are especially easy to confuse. Match the hash material to the correct mode before running a dictionary test.</p><div class="stack"><div class="example"><h3>NTLM hash</h3><pre><code>hashcat -m 1000 -a 0 ntlm.txt wordlist.txt</code></pre></div><div class="example"><h3>NetNTLMv2 challenge-response</h3><pre><code>hashcat -m 5600 -a 0 netntlmv2.txt wordlist.txt</code></pre></div><div class="example"><h3>Kerberos TGS-REP, etype 23</h3><pre><code>hashcat -m 13100 -a 0 tgs-etype23.txt wordlist.txt</code></pre></div><div class="example"><h3>Kerberos AS-REP, etype 23</h3><pre><code>hashcat -m 18200 -a 0 asrep-etype23.txt wordlist.txt</code></pre></div></div><p class="hint">These AD command examples are PentestBlueprint adaptations for authorized labs, not verbatim examples from the BHIS sheet.</p></section>
+          <section id="resources"><p class="eyebrow">08 / FURTHER READING</p><h2>Sources & credits</h2><p><strong>Primary reference:</strong> Black Hills Information Security, <em>Hashcat Cheatsheet</em> (2 pages). Written by Justin Wang; revised by Kent Ickler.</p><p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2020/09/HashcatCheatSheet.v2018.1b.pdf" target="_blank" rel="noopener noreferrer">BHIS linked Hashcat cheatsheet PDF ↗</a></p><p><a href="https://github.com/hashcat/hashcat" target="_blank" rel="noopener noreferrer">Official Hashcat GitHub repository ↗</a></p><p>This page is an independently written learning resource. The BHIS name and authorship are credited for the source material; no endorsement is implied.</p></section>
         </article>
-        <aside class="toc"><p>ON THIS PAGE</p><a href="#overview">Overview</a><a href="#modes">Hash modes</a><a href="#lab-commands">Lab essentials</a><a href="#everyday">Everyday commands</a><a href="#troubleshooting">Troubleshooting</a><a href="#ad">AD examples</a><a href="#resources">Credits & resources</a></aside>
+        <aside class="toc"><p>ON THIS PAGE</p><a href="#overview">Overview</a><a href="#modes">Hash modes</a><a href="#attacks">Attack modes</a><a href="#masks">Mask tokens</a><a href="#workflow">Workflow</a><a href="#commands">Commands</a><a href="#ad">AD examples</a><a href="#resources">Credits & resources</a></aside>
       </div>
       <div class="back"><a href="/dark-codex">← Back to The Dark Codex</a></div>
     </main>
