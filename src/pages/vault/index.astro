@@ -1,1 +1,72 @@
 
+---
+export const prerender = false;
+
+import { COOKIE_NAME, validSession } from "../../lib/vault-auth";
+
+Astro.response.headers.set("Cache-Control", "no-store");
+Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow");
+
+if (!validSession(Astro.cookies.get(COOKIE_NAME)?.value)) {
+  return Astro.redirect("/vault/login");
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Private Vault | PentestBlueprint</title>
+    <style>
+      body {
+        background: #080b0a;
+        color: #f0f4ef;
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 40px 24px;
+      }
+      main { max-width: 1000px; margin: auto; }
+      header { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+      h1 { font-size: 32px; }
+      .accent { color: #9cff57; }
+      .card {
+        margin-top: 32px;
+        padding: 28px;
+        border: 1px solid #263329;
+        border-radius: 12px;
+        background: #101612;
+      }
+      p { color: #a0aaa2; line-height: 1.7; }
+      button {
+        background: transparent;
+        color: #9cff57;
+        border: 1px solid #344338;
+        border-radius: 8px;
+        padding: 12px 18px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <strong class="accent">PENTESTBLUEPRINT / VAULT</strong>
+        <form method="POST" action="/vault/logout">
+          <button type="submit">Log out</button>
+        </form>
+      </header>
+
+      <h1>Private Knowledge Vault</h1>
+      <p>Welcome back, 0xAclOverride.</p>
+
+      <section class="card">
+        <h2>Knowledge Library</h2>
+        <p>Your private workspace is ready for the next development phase.</p>
+        <p>Coming next: Notion ZIP imports, Markdown notes, folders, search, and attachments.</p>
+      </section>
+    </main>
+  </body>
+</html>
+
