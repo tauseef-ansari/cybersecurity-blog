@@ -41,10 +41,17 @@ const steps = [
             <div class="example" id={method.id}>
               <h3>{method.name}</h3>
               <p>{method.description}</p>
-              <div class="command-label">Command usage</div>
-              <pre><code>{method.usage}</code></pre>
-              <div class="command-label">Example</div>
-              <pre><code>{method.example}</code></pre>
+              {step.usage !== step.example && (
+  <>
+    <div class="command-label">Command usage</div>
+    <pre><code>{step.usage}</code></pre>
+  </>
+)}
+
+<div class="command-label">
+  {step.usage === step.example ? 'Command' : 'Example'}
+</div>
+<pre><code>{step.example}</code></pre>
               {method.note && <p class="hint">{method.note}</p>}
               {method.link && <p class="reference"><a href={method.link} target="_blank" rel="noopener noreferrer">{method.linkLabel} ↗</a></p>}
             </div>
