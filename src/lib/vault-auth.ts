@@ -1,4 +1,5 @@
 
+import { getStore } from "@netlify/blobs";
 import {
   createHmac,
   pbkdf2Sync,
@@ -63,13 +64,21 @@ function sign(payload: string): string {
     .digest("base64url");
 }
 
-export function createSession(): string {
+export async function createSession(): Promise<string> {
   const expires = Date.now() + SESSION_SECONDS * 1000;
   const payload = `${expires}.${randomBytes(16).toString("hex")}`;
+  await getStore("pentestblueprint-vault-sessions").set(nonceKey(payload), "active");
   return `${payload}.${sign(payload)}`;
 }
 
-export function validSession(token?: string): boolean {
+function nonceKey(payload: string) { return `session/${payload.split(".")[1]}`; }
+
+export async function revokeSession(token?: string): Promise<void> {
+  if (!token || !(await validSession(token))) return;
+  await getStore("pentestblueprint-vault-sessions").delete(nonceKey(token));
+}
+
+export async function validSession(token?: string): Promise<boolean> {
   if (!token) return false;
 
   try {
@@ -84,8 +93,8 @@ export function validSession(token?: string): boolean {
     const expected = Buffer.from(sign(`${expires}.${nonce}`));
     const received = Buffer.from(signature);
 
-    return expected.length === received.length &&
-      timingSafeEqual(expected, received);
+    if (!(expected.length === received.length && timingSafeEqual(expected, received))) return false;
+    return (await getStore("pentestblueprint-vault-sessions").get(nonceKey(token))) === "active";
   } catch {
     return false;
   }
