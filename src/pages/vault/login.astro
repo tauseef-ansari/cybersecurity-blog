@@ -9,11 +9,12 @@ import {
   validCredentials,
   validSession,
 } from "../../lib/vault-auth";
+import { loginAllowed, recordFailure, clearFailures } from "../../lib/vault-limit";
 
 Astro.response.headers.set("Cache-Control", "no-store");
 Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow");
 
-if (validSession(Astro.cookies.get(COOKIE_NAME)?.value)) {
+if (await validSession(Astro.cookies.get(COOKIE_NAME)?.value)) {
   return Astro.redirect("/vault");
 }
 
@@ -38,11 +39,16 @@ if (Astro.request.method === "POST") {
   const username = data.get("username") || "";
   const password = data.get("password") || "";
 
+  const ip = Astro.clientAddress || Astro.request.headers.get("x-nf-client-connection-ip") || "unknown";
+  if (!(await loginAllowed(ip))) return new Response("Too many attempts. Try again in 15 minutes.", { status: 429 });
+
   if (validCredentials(username, password)) {
-    Astro.cookies.set(COOKIE_NAME, createSession(), cookieOptions);
+    await clearFailures(ip);
+    Astro.cookies.set(COOKIE_NAME, await createSession(), cookieOptions);
     return Astro.redirect("/vault", 303);
   }
 
+  await recordFailure(ip);
   error = "Invalid username or password.";
   Astro.response.status = 401;
 }
